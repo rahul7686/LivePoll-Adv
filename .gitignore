@@ -1,0 +1,10 @@
+**/node_modules/
+**/dist/
+**/target/
+**/.vite/
+.chrome-headless/
+.edge-headless/
+.edge-debug/
+*.log
+.DS_Store
+Thumbs.db
