@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   POLL_CONTRACT_ID,
   POLL_NETWORK_PASSPHRASE,
@@ -21,6 +21,7 @@ const defaultCounts = Object.fromEntries(
 const contractIdPreview = `${POLL_CONTRACT_ID.slice(0, 12)}...${POLL_CONTRACT_ID.slice(-8)}`
 
 const readClient = createReadClient()
+const WALLET_DISCONNECT_STORAGE_KEY = 'live-poll-wallet-manual-disconnect'
 
 const createIdleTransactionState = () => ({
   phase: 'idle',
@@ -28,6 +29,27 @@ const createIdleTransactionState = () => ({
   txHash: '',
   message: 'No vote submitted yet.',
 })
+
+const readManualDisconnectPreference = () => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.localStorage.getItem(WALLET_DISCONNECT_STORAGE_KEY) === 'true'
+}
+
+const writeManualDisconnectPreference = (shouldStayDisconnected) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (shouldStayDisconnected) {
+    window.localStorage.setItem(WALLET_DISCONNECT_STORAGE_KEY, 'true')
+    return
+  }
+
+  window.localStorage.removeItem(WALLET_DISCONNECT_STORAGE_KEY)
+}
 
 const formatAddress = (address) =>
   `${address.slice(0, 6)}...${address.slice(-6)}`
@@ -159,6 +181,7 @@ function App() {
   const [transactionState, setTransactionState] = useState(
     createIdleTransactionState(),
   )
+  const shouldStayDisconnectedRef = useRef(readManualDisconnectPreference())
   const [syncState, setSyncState] = useState({
     status: 'starting',
     message: 'Connecting to Soroban events...',
@@ -242,6 +265,12 @@ function App() {
     transactionToneByPhase[transactionState.phase] ?? 'muted'
 
   const syncTone = syncToneByState[syncState.status] ?? 'muted'
+
+  const clearWalletConnectionState = useCallback(() => {
+    setWalletAddress('')
+    setWalletPassphrase('')
+    setWalletNetwork('')
+  }, [])
 
   const loadVotes = useCallback(async ({ silent = false } = {}) => {
     if (silent) {
@@ -350,6 +379,8 @@ function App() {
       const networkName =
         networkDetails.network || formatNetworkName(networkPassphrase)
 
+      shouldStayDisconnectedRef.current = false
+      writeManualDisconnectPreference(false)
       setSelectedWalletId(wallet.id)
       setWalletAddress(address)
       setWalletPassphrase(networkPassphrase)
@@ -373,14 +404,16 @@ function App() {
     setWalletError('')
 
     try {
+      shouldStayDisconnectedRef.current = true
+      writeManualDisconnectPreference(true)
       await StellarWalletsKit.disconnect()
-      setWalletAddress('')
-      setWalletPassphrase('')
-      setWalletNetwork('')
+      clearWalletConnectionState()
     } catch (error) {
+      shouldStayDisconnectedRef.current = false
+      writeManualDisconnectPreference(false)
       setWalletError(formatError(error))
     }
-  }, [])
+  }, [clearWalletConnectionState])
 
   const handleVote = useCallback(
     async (option) => {
@@ -502,10 +535,22 @@ function App() {
 
     initWalletKit()
 
+    if (shouldStayDisconnectedRef.current) {
+      void StellarWalletsKit.disconnect().catch(() => {
+        clearWalletConnectionState()
+      })
+      clearWalletConnectionState()
+    }
+
     const unsubscribeStateUpdated = StellarWalletsKit.on(
       KitEventType.STATE_UPDATED,
       ({ payload }) => {
         if (isCancelled) {
+          return
+        }
+
+        if (shouldStayDisconnectedRef.current) {
+          clearWalletConnectionState()
           return
         }
 
@@ -533,9 +578,7 @@ function App() {
           return
         }
 
-        setWalletAddress('')
-        setWalletPassphrase('')
-        setWalletNetwork('')
+        clearWalletConnectionState()
       },
     )
 
@@ -546,7 +589,7 @@ function App() {
       unsubscribeWalletSelected?.()
       unsubscribeDisconnect?.()
     }
-  }, [loadVotes, refreshWallets])
+  }, [clearWalletConnectionState, loadVotes, refreshWallets])
 
   useEffect(() => {
     let isCancelled = false
