@@ -36,9 +36,9 @@ This project satisfies the Level 2 live poll idea with:
 
 Optional public deployment: not deployed yet. Local HTTPS dev server runs at `https://localhost:5173/`.
 
-## Wallet Options Screenshot
+## Wallet Selector Screenshot
 
-![Wallet options](./docs/wallet-options.png)
+![Wallet selector](./docs/wallet-options.png)
 
 ## Local Setup
 
@@ -56,6 +56,7 @@ The Vite scripts use the native config loader so the app builds cleanly in this 
 ### Wallet
 
 Use any available Stellar wallet shown in the app and switch it to Testnet before voting.
+The wallet chooser uses one selector and one connect button so people can quickly switch between detected wallets.
 
 ### Contract
 
@@ -71,7 +72,7 @@ cargo build --target wasm32v1-none --release
 ## How To Use
 
 1. Open the app at `https://localhost:5173/`
-2. Choose an available wallet from the wallet list
+2. Choose an available wallet from the wallet selector
 3. Connect the wallet and confirm it is on Testnet
 4. Vote for `Option A` or `Option B`
 5. Watch the transaction status panel and the live event sync panel update
@@ -105,6 +106,6 @@ npm run build
 - Minimum 2 meaningful commits: prepared locally in this repo history
 - README includes:
   - setup instructions
-  - wallet options screenshot
+  - wallet selector screenshot
   - deployed contract address
   - verifiable contract call transaction hash
