@@ -219,11 +219,18 @@ function App() {
       return 'No votes yet'
     }
 
-    return POLL_OPTIONS.reduce((leader, option) =>
-      (counts[option.symbol] ?? 0) > (counts[leader.symbol] ?? 0)
-        ? option
-        : leader,
-    ).label
+    const highestVoteCount = Math.max(
+      ...POLL_OPTIONS.map(({ symbol }) => counts[symbol] ?? 0),
+    )
+    const leaders = POLL_OPTIONS.filter(
+      ({ symbol }) => (counts[symbol] ?? 0) === highestVoteCount,
+    )
+
+    if (leaders.length !== 1) {
+      return 'Draw'
+    }
+
+    return leaders[0].label
   }, [counts, totalVotes])
 
   const walletState = (() => {
