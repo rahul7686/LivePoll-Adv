@@ -6,7 +6,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 
 - Public GitHub repository: [github.com/rahul7686/LivePoll-Adv](https://github.com/rahul7686/LivePoll-Adv)
 - Live demo link: [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
-- Deploy workflow: [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml)
+- Vercel config: [`vercel.json`](./vercel.json)
 
 ## Submission Checklist
 
@@ -30,7 +30,6 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 
 ## Project Structure
 
-- `.github/workflows/` - GitHub Pages deployment automation
 - `live-poll-contract/` - Soroban contract workspace
 - `live-poll-website/` - React + Vite frontend
 - `docs/` - submission evidence, screenshots, and demo assets
@@ -38,9 +37,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 ## Live Demo
 
 - Vercel production URL: [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
-- GitHub Pages URL: [rahul7686.github.io/LivePoll-Adv](https://rahul7686.github.io/LivePoll-Adv/)
-- Every push to `main` triggers [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml), which builds `live-poll-website` and publishes it to GitHub Pages.
-- If the URL is not live yet, wait for the latest GitHub Actions deployment on `main` to finish.
+- If the URL is not live yet, redeploy the latest `main` commit from Vercel.
 
 ## Deployed Contract
 
@@ -126,22 +123,13 @@ cargo test
 cd ../live-poll-website
 npm.cmd run lint
 npm.cmd run build
-
-$env:VITE_BASE_PATH='/LivePoll-Adv/'
-npm.cmd run build
 ```
 
 ## Deployment
 
-- GitHub Pages is configured through [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml).
-- The workflow installs the frontend dependencies, builds the app with `VITE_BASE_PATH=/LivePoll-Adv/`, and publishes `live-poll-website/dist`.
-- If you rename the repository, update the `VITE_BASE_PATH` value in the workflow so the live demo path stays correct.
-
-### Vercel
-
 - Vercel can deploy this repo from the repository root using [`vercel.json`](./vercel.json).
 - Recommended Vercel settings: Framework Preset `Vite`, Root Directory `.`, Install Command `cd live-poll-website && npm ci`, Build Command `cd live-poll-website && npm run build`, Output Directory `live-poll-website/dist`, Production Branch `main`.
-- Remove `VITE_BASE_PATH` from the Vercel project environment if it exists, because the GitHub Pages base path `/LivePoll-Adv/` is not needed on Vercel.
+- Remove `VITE_BASE_PATH` from the Vercel project environment if it exists.
 - After saving the settings, redeploy the latest `main` commit.
 
 ## Key Files
@@ -152,7 +140,7 @@ npm.cmd run build
 - Frontend styles: `live-poll-website/src/App.css`
 - Contract client helpers: `live-poll-website/src/lib/pollClient.js`
 - Wallet integration: `live-poll-website/src/lib/walletKit.js`
-- Pages deployment workflow: `.github/workflows/deploy-pages.yml`
+- Vercel deployment config: `vercel.json`
 
 ## Commit History
 
