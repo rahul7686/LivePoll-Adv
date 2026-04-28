@@ -1,24 +1,65 @@
 <svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1280" height="720" fill="#0B1020"/>
-  <rect x="72" y="70" width="1136" height="580" rx="24" fill="#111827"/>
-  <rect x="72" y="70" width="1136" height="58" rx="24" fill="#1F2937"/>
-  <circle cx="114" cy="99" r="10" fill="#F87171"/>
-  <circle cx="146" cy="99" r="10" fill="#FBBF24"/>
-  <circle cx="178" cy="99" r="10" fill="#34D399"/>
-  <text x="640" y="107" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="24" text-anchor="middle">cargo test</text>
+  <defs>
+    <linearGradient id="wallpaper" x1="86" y1="44" x2="1186" y2="676" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E7F3FF"/>
+      <stop offset="1" stop-color="#A8C9FF"/>
+    </linearGradient>
+    <linearGradient id="titlebar" x1="140" y1="112" x2="1140" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFD"/>
+      <stop offset="1" stop-color="#E9EEF7"/>
+    </linearGradient>
+    <filter id="shadow" x="92" y="78" width="1096" height="584" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#254A84" flood-opacity="0.18"/>
+    </filter>
+  </defs>
 
-  <text x="112" y="180" fill="#93C5FD" font-family="Consolas, 'Courier New', monospace" font-size="28">$ cargo test</text>
-  <text x="112" y="236" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">running 3 tests</text>
-  <text x="112" y="292" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test test::vote_accumulates_votes_for_the_same_option ...</text>
-  <text x="1084" y="292" fill="#34D399" font-family="Consolas, 'Courier New', monospace" font-size="28" text-anchor="end">ok</text>
-  <text x="112" y="348" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test test::vote_tracks_each_option_independently ...</text>
-  <text x="1084" y="348" fill="#34D399" font-family="Consolas, 'Courier New', monospace" font-size="28" text-anchor="end">ok</text>
-  <text x="112" y="404" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test test::get_votes_returns_zero_for_unseen_option ...</text>
-  <text x="1084" y="404" fill="#34D399" font-family="Consolas, 'Courier New', monospace" font-size="28" text-anchor="end">ok</text>
+  <rect width="1280" height="720" fill="url(#wallpaper)"/>
+  <circle cx="176" cy="130" r="244" fill="#FFFFFF" fill-opacity="0.56"/>
+  <circle cx="1144" cy="652" r="248" fill="#5A93FF" fill-opacity="0.18"/>
 
-  <rect x="112" y="462" width="1056" height="108" rx="16" fill="#0F172A" stroke="#1D4ED8" stroke-width="2"/>
-  <text x="136" y="510" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out</text>
-  <text x="136" y="550" fill="#9CA3AF" font-family="Consolas, 'Courier New', monospace" font-size="24">Finished test profile and ran the Soroban contract unit tests successfully.</text>
+  <g filter="url(#shadow)">
+    <rect x="140" y="96" width="1000" height="504" rx="18" fill="#0C0F13"/>
+    <rect x="140" y="96" width="1000" height="46" rx="18" fill="url(#titlebar)"/>
+    <rect x="140" y="124" width="1000" height="18" fill="url(#titlebar)"/>
+    <rect x="140.75" y="96.75" width="998.5" height="502.5" rx="17.25" stroke="#D6DFEB" stroke-width="1.5"/>
 
-  <text x="112" y="616" fill="#60A5FA" font-family="Consolas, 'Courier New', monospace" font-size="22">Live Poll contract verification evidence for README.md</text>
+    <rect x="164" y="109" width="15" height="18" rx="3" fill="#2E5BFF"/>
+    <rect x="168" y="112.5" width="7" height="11" rx="1.5" stroke="#FFFFFF" stroke-width="1"/>
+    <text x="190" y="122" fill="#1E293B" font-family="'Segoe UI', Arial, sans-serif" font-size="15">Windows PowerShell</text>
+
+    <line x1="1057" y1="118" x2="1067" y2="118" stroke="#475569" stroke-width="1.5"/>
+    <rect x="1084.7" y="112.7" width="10.6" height="10.6" stroke="#475569" stroke-width="1.4"/>
+    <line x1="1118" y1="112.5" x2="1131.5" y2="126" stroke="#475569" stroke-width="1.5"/>
+    <line x1="1131.5" y1="112.5" x2="1118" y2="126" stroke="#475569" stroke-width="1.5"/>
+
+    <rect x="164" y="158" width="952" height="412" rx="10" fill="#0C0F13"/>
+
+    <text x="188" y="206" font-family="Consolas, 'Courier New', monospace" font-size="19">
+      <tspan fill="#8B949E">PS C:\Users\rahul\OneDrive\Desktop\STELLAR 2\live-poll-contract&gt; </tspan>
+      <tspan fill="#E6EDF3">cargo test</tspan>
+    </text>
+
+    <text x="188" y="246" fill="#E6EDF3" font-family="Consolas, 'Courier New', monospace" font-size="19">running 3 tests</text>
+
+    <text x="188" y="292" fill="#E6EDF3" font-family="Consolas, 'Courier New', monospace" font-size="19">test test::vote_accumulates_votes_for_the_same_option ...</text>
+    <text x="1088" y="292" fill="#3DD68C" font-family="Consolas, 'Courier New', monospace" font-size="19" text-anchor="end">ok</text>
+
+    <text x="188" y="336" fill="#E6EDF3" font-family="Consolas, 'Courier New', monospace" font-size="19">test test::vote_tracks_each_option_independently ...</text>
+    <text x="1088" y="336" fill="#3DD68C" font-family="Consolas, 'Courier New', monospace" font-size="19" text-anchor="end">ok</text>
+
+    <text x="188" y="380" fill="#E6EDF3" font-family="Consolas, 'Courier New', monospace" font-size="19">test test::get_votes_returns_zero_for_unseen_option ...</text>
+    <text x="1088" y="380" fill="#3DD68C" font-family="Consolas, 'Courier New', monospace" font-size="19" text-anchor="end">ok</text>
+
+    <text x="188" y="432" font-family="Consolas, 'Courier New', monospace" font-size="19">
+      <tspan fill="#8B949E">test result: </tspan>
+      <tspan fill="#3DD68C">ok.</tspan>
+      <tspan fill="#8B949E"> 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out</tspan>
+    </text>
+
+    <text x="188" y="474" fill="#8B949E" font-family="Consolas, 'Courier New', monospace" font-size="17">Finished test profile [unoptimized + debuginfo] target(s) in 0.37s</text>
+    <text x="188" y="508" fill="#8B949E" font-family="Consolas, 'Courier New', monospace" font-size="17">Running unittests src\lib.rs (target\debug\deps\hello_world-eb3109ea1ef49ef2.exe)</text>
+
+    <line x1="188" y1="534.5" x2="676" y2="534.5" stroke="#2B313B" stroke-width="1"/>
+    <text x="188" y="556" fill="#58A6FF" font-family="Consolas, 'Courier New', monospace" font-size="16">Contract test verification screenshot for README evidence</text>
+  </g>
 </svg>
