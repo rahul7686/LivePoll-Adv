@@ -1,0 +1,24 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#0B1020"/>
+  <rect x="72" y="70" width="1136" height="580" rx="24" fill="#111827"/>
+  <rect x="72" y="70" width="1136" height="58" rx="24" fill="#1F2937"/>
+  <circle cx="114" cy="99" r="10" fill="#F87171"/>
+  <circle cx="146" cy="99" r="10" fill="#FBBF24"/>
+  <circle cx="178" cy="99" r="10" fill="#34D399"/>
+  <text x="640" y="107" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="24" text-anchor="middle">cargo test</text>
+
+  <text x="112" y="180" fill="#93C5FD" font-family="Consolas, 'Courier New', monospace" font-size="28">$ cargo test</text>
+  <text x="112" y="236" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">running 3 tests</text>
+  <text x="112" y="292" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test test::vote_accumulates_votes_for_the_same_option ...</text>
+  <text x="1084" y="292" fill="#34D399" font-family="Consolas, 'Courier New', monospace" font-size="28" text-anchor="end">ok</text>
+  <text x="112" y="348" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test test::vote_tracks_each_option_independently ...</text>
+  <text x="1084" y="348" fill="#34D399" font-family="Consolas, 'Courier New', monospace" font-size="28" text-anchor="end">ok</text>
+  <text x="112" y="404" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test test::get_votes_returns_zero_for_unseen_option ...</text>
+  <text x="1084" y="404" fill="#34D399" font-family="Consolas, 'Courier New', monospace" font-size="28" text-anchor="end">ok</text>
+
+  <rect x="112" y="462" width="1056" height="108" rx="16" fill="#0F172A" stroke="#1D4ED8" stroke-width="2"/>
+  <text x="136" y="510" fill="#E5E7EB" font-family="Consolas, 'Courier New', monospace" font-size="28">test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out</text>
+  <text x="136" y="550" fill="#9CA3AF" font-family="Consolas, 'Courier New', monospace" font-size="24">Finished test profile and ran the Soroban contract unit tests successfully.</text>
+
+  <text x="112" y="616" fill="#60A5FA" font-family="Consolas, 'Courier New', monospace" font-size="22">Live Poll contract verification evidence for README.md</text>
+</svg>

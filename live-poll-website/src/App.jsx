@@ -22,6 +22,7 @@ const contractIdPreview = `${POLL_CONTRACT_ID.slice(0, 12)}...${POLL_CONTRACT_ID
 
 const readClient = createReadClient()
 const WALLET_DISCONNECT_STORAGE_KEY = 'live-poll-wallet-manual-disconnect'
+const VOTE_CACHE_STORAGE_KEY = 'live-poll-vote-cache'
 
 const createIdleTransactionState = () => ({
   phase: 'idle',
@@ -29,6 +30,53 @@ const createIdleTransactionState = () => ({
   txHash: '',
   message: 'No vote submitted yet.',
 })
+
+const normalizeVoteCounts = (counts) =>
+  Object.fromEntries(
+    POLL_OPTIONS.map(({ symbol }) => [symbol, Number(counts?.[symbol] ?? 0)]),
+  )
+
+const readVoteCache = () => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const rawCache = window.localStorage.getItem(VOTE_CACHE_STORAGE_KEY)
+
+    if (!rawCache) {
+      return null
+    }
+
+    const parsedCache = JSON.parse(rawCache)
+
+    return {
+      counts: normalizeVoteCounts(parsedCache.counts),
+      lastUpdatedAt:
+        typeof parsedCache.lastUpdatedAt === 'string'
+          ? parsedCache.lastUpdatedAt
+          : '',
+    }
+  } catch {
+    return null
+  }
+}
+
+const writeVoteCache = (counts, lastUpdatedAt) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(
+    VOTE_CACHE_STORAGE_KEY,
+    JSON.stringify({
+      counts: normalizeVoteCounts(counts),
+      lastUpdatedAt,
+    }),
+  )
+}
+
+const initialVoteCache = readVoteCache()
 
 const readManualDisconnectPreference = () => {
   if (typeof window === 'undefined') {
@@ -161,8 +209,8 @@ const transactionToneByPhase = {
 }
 
 function App() {
-  const [counts, setCounts] = useState(defaultCounts)
-  const [isLoadingVotes, setIsLoadingVotes] = useState(true)
+  const [counts, setCounts] = useState(() => initialVoteCache?.counts ?? defaultCounts)
+  const [isLoadingVotes, setIsLoadingVotes] = useState(() => !initialVoteCache)
   const [isRefreshingVotes, setIsRefreshingVotes] = useState(false)
   const [refreshError, setRefreshError] = useState('')
   const [walletError, setWalletError] = useState('')
@@ -174,7 +222,9 @@ function App() {
   const [isLoadingWallets, setIsLoadingWallets] = useState(true)
   const [selectedWalletId, setSelectedWalletId] = useState('')
   const [isConnectingWalletId, setIsConnectingWalletId] = useState('')
-  const [lastUpdatedAt, setLastUpdatedAt] = useState('')
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(
+    () => initialVoteCache?.lastUpdatedAt ?? '',
+  )
   const [copiedContract, setCopiedContract] = useState(false)
   const [lastReceipt, setLastReceipt] = useState(null)
   const [lastEvent, setLastEvent] = useState(null)
@@ -278,6 +328,14 @@ function App() {
     setWalletPassphrase('')
     setWalletNetwork('')
   }, [])
+
+  useEffect(() => {
+    if (!lastUpdatedAt) {
+      return
+    }
+
+    writeVoteCache(counts, lastUpdatedAt)
+  }, [counts, lastUpdatedAt])
 
   const loadVotes = useCallback(async ({ silent = false } = {}) => {
     if (silent) {
@@ -537,7 +595,7 @@ function App() {
     let isCancelled = false
     const initTimeoutId = window.setTimeout(() => {
       void refreshWallets()
-      void loadVotes()
+      void loadVotes({ silent: Boolean(initialVoteCache) })
     }, 0)
 
     initWalletKit()
