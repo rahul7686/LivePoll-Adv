@@ -5,7 +5,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 ## Project Links
 
 - Public GitHub repository: [github.com/rahul7686/LivePoll-Adv](https://github.com/rahul7686/LivePoll-Adv)
-- Live demo link: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
+- Live demo link: [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
 - Deploy workflow: [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml)
 
 ## Submission Checklist
@@ -37,7 +37,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 
 ## Live Demo
 
-- Vercel production URL: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
+- Vercel production URL: [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
 - GitHub Pages URL: [rahul7686.github.io/LivePoll-Adv](https://rahul7686.github.io/LivePoll-Adv/)
 - Every push to `main` triggers [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml), which builds `live-poll-website` and publishes it to GitHub Pages.
 - If the URL is not live yet, wait for the latest GitHub Actions deployment on `main` to finish.
@@ -97,7 +97,7 @@ cargo build --target wasm32v1-none --release
 
 ## How To Use
 
-1. Open the app at [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
+1. Open the app at [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
 2. Refresh detected wallets if needed
 3. Choose an available wallet and connect it
 4. Confirm the wallet is on Stellar Testnet
