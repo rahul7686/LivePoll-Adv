@@ -6,6 +6,9 @@
 .chrome-headless/
 .edge-headless/
 .edge-debug/
+.chrome-demo-profile/
+docs/.demo-browser-profile/
+docs/.profile-*/
 *.log
 .DS_Store
 Thumbs.db
