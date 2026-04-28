@@ -19,8 +19,6 @@ const defaultCounts = Object.fromEntries(
 )
 
 const contractIdPreview = `${POLL_CONTRACT_ID.slice(0, 12)}...${POLL_CONTRACT_ID.slice(-8)}`
-
-const readClient = createReadClient()
 const WALLET_DISCONNECT_STORAGE_KEY = 'live-poll-wallet-manual-disconnect'
 const VOTE_CACHE_STORAGE_KEY = 'live-poll-vote-cache'
 
@@ -101,6 +99,13 @@ const writeManualDisconnectPreference = (shouldStayDisconnected) => {
 
 const formatAddress = (address) =>
   `${address.slice(0, 6)}...${address.slice(-6)}`
+
+const formatRefreshTimestamp = (date = new Date()) =>
+  date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+  })
 
 const formatError = (error) => {
   if (!error) {
@@ -232,6 +237,7 @@ function App() {
     createIdleTransactionState(),
   )
   const shouldStayDisconnectedRef = useRef(readManualDisconnectPreference())
+  const latestVoteRequestIdRef = useRef(0)
   const [syncState, setSyncState] = useState({
     status: 'starting',
     message: 'Connecting to Soroban events...',
@@ -338,6 +344,9 @@ function App() {
   }, [counts, lastUpdatedAt])
 
   const loadVotes = useCallback(async ({ silent = false } = {}) => {
+    const requestId = latestVoteRequestIdRef.current + 1
+    latestVoteRequestIdRef.current = requestId
+
     if (silent) {
       setIsRefreshingVotes(true)
     } else {
@@ -347,6 +356,7 @@ function App() {
     setRefreshError('')
 
     try {
+      const readClient = createReadClient()
       const results = await Promise.all(
         POLL_OPTIONS.map(({ symbol }) =>
           readClient.get_votes({
@@ -354,6 +364,10 @@ function App() {
           }),
         ),
       )
+
+      if (latestVoteRequestIdRef.current !== requestId) {
+        return
+      }
 
       setCounts(
         Object.fromEntries(
@@ -363,13 +377,21 @@ function App() {
           ]),
         ),
       )
-      setLastUpdatedAt(new Date().toLocaleTimeString())
+      setLastUpdatedAt(formatRefreshTimestamp())
     } catch (error) {
+      if (latestVoteRequestIdRef.current !== requestId) {
+        return
+      }
+
       setRefreshError(formatError(error))
-    } finally {
-      setIsLoadingVotes(false)
-      setIsRefreshingVotes(false)
     }
+
+    if (latestVoteRequestIdRef.current !== requestId) {
+      return
+    }
+
+    setIsLoadingVotes(false)
+    setIsRefreshingVotes(false)
   }, [])
 
   const refreshWallets = useCallback(async () => {
@@ -411,7 +433,7 @@ function App() {
     })
 
     setLastUpdatedAt(
-      new Date(parsedEvent.ledgerClosedAt || Date.now()).toLocaleTimeString(),
+      formatRefreshTimestamp(new Date(parsedEvent.ledgerClosedAt || Date.now())),
     )
     setLastEvent(parsedEvent)
   }, [])
