@@ -59,10 +59,6 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 - Demo video: [Google Drive recording](https://drive.google.com/file/d/1UR3PWTMgjcDsVdP7BnRU-rHqyRAdyuBA/view?usp=sharing)
 - Local MP4 asset: [`docs/live-poll-demo.mp4`](./docs/live-poll-demo.mp4)
 
-<p align="center">
-  <img src="./docs/live-poll-demo.gif" alt="Recorded demo walkthrough" width="880" />
-</p>
-
 ## Local Setup
 
 ### Frontend
