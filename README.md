@@ -5,7 +5,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 ## Project Links
 
 - Public GitHub repository: [github.com/rahul7686/LivePoll-Adv](https://github.com/rahul7686/LivePoll-Adv)
-- Live demo target: [rahul7686.github.io/LivePoll-Adv](https://rahul7686.github.io/LivePoll-Adv/)
+- Live demo link: [rahul7686.github.io/LivePoll-Adv](https://rahul7686.github.io/LivePoll-Adv/)
 - Deploy workflow: [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml)
 
 ## Submission Checklist
@@ -14,7 +14,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 - Minimum 3 tests passing: `cargo test` passes 3 Soroban contract tests.
 - README complete: setup, usage, verification, deployed contract evidence, live demo link, screenshots, and commit evidence are all included here.
 - Minimum 3+ meaningful commits: the git history exceeds the requirement.
-- Demo evidence is already included in the repo, although the video portion was not part of this refresh.
+- Demo video link is included below alongside the existing visual walkthrough assets.
 
 ## Features
 
@@ -59,6 +59,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 
 ## Recorded Demo
 
+- Demo video (MP4): [`docs/live-poll-demo.mp4`](./docs/live-poll-demo.mp4)
 - Recorded walkthrough: [`docs/live-poll-demo.gif`](./docs/live-poll-demo.gif)
 - Demo storyboard source: [`docs/demo-video.html`](./docs/demo-video.html)
 
