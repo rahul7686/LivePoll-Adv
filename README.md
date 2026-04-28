@@ -5,7 +5,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 ## Project Links
 
 - Public GitHub repository: [github.com/rahul7686/LivePoll-Adv](https://github.com/rahul7686/LivePoll-Adv)
-- Live demo link: [rahul7686.github.io/LivePoll-Adv](https://rahul7686.github.io/LivePoll-Adv/)
+- Live demo link: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
 - Deploy workflow: [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml)
 
 ## Submission Checklist
@@ -37,6 +37,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 
 ## Live Demo
 
+- Vercel production URL: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
 - GitHub Pages URL: [rahul7686.github.io/LivePoll-Adv](https://rahul7686.github.io/LivePoll-Adv/)
 - Every push to `main` triggers [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml), which builds `live-poll-website` and publishes it to GitHub Pages.
 - If the URL is not live yet, wait for the latest GitHub Actions deployment on `main` to finish.
@@ -63,7 +64,9 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 - Recorded walkthrough: [`docs/live-poll-demo.gif`](./docs/live-poll-demo.gif)
 - Demo storyboard source: [`docs/demo-video.html`](./docs/demo-video.html)
 
-![Recorded demo walkthrough](./docs/live-poll-demo.gif)
+<p align="center">
+  <img src="./docs/live-poll-demo.gif" alt="Recorded demo walkthrough" width="880" />
+</p>
 
 ## Local Setup
 
@@ -77,7 +80,7 @@ npm run dev
 
 If PowerShell blocks `npm.ps1`, use `npm.cmd install` and `npm.cmd run dev` instead.
 
-Open `https://localhost:5173/` and accept the local HTTPS warning once if your browser asks.
+For local development, open `https://localhost:5173/` and accept the local HTTPS warning once if your browser asks.
 
 ### Wallet
 
@@ -94,7 +97,7 @@ cargo build --target wasm32v1-none --release
 
 ## How To Use
 
-1. Open the app at `https://localhost:5173/`
+1. Open the app at [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
 2. Refresh detected wallets if needed
 3. Choose an available wallet and connect it
 4. Confirm the wallet is on Stellar Testnet
@@ -133,6 +136,13 @@ npm.cmd run build
 - GitHub Pages is configured through [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml).
 - The workflow installs the frontend dependencies, builds the app with `VITE_BASE_PATH=/LivePoll-Adv/`, and publishes `live-poll-website/dist`.
 - If you rename the repository, update the `VITE_BASE_PATH` value in the workflow so the live demo path stays correct.
+
+### Vercel
+
+- Vercel can deploy this repo from the repository root using [`vercel.json`](./vercel.json).
+- Recommended Vercel settings: Framework Preset `Vite`, Root Directory `.`, Install Command `cd live-poll-website && npm ci`, Build Command `cd live-poll-website && npm run build`, Output Directory `live-poll-website/dist`, Production Branch `main`.
+- Remove `VITE_BASE_PATH` from the Vercel project environment if it exists, because the GitHub Pages base path `/LivePoll-Adv/` is not needed on Vercel.
+- After saving the settings, redeploy the latest `main` commit.
 
 ## Key Files
 
