@@ -5,7 +5,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 ## Project Links
 
 - Public GitHub repository: [github.com/rahul7686/LivePoll-Adv](https://github.com/rahul7686/LivePoll-Adv)
-- Live demo link: [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
+- Live demo link: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
 - Vercel config: [`vercel.json`](./vercel.json)
 
 ## Submission Checklist
@@ -36,7 +36,7 @@ One-question mini-dApp built with a Soroban smart contract and a React frontend.
 
 ## Live Demo
 
-- Vercel production URL: [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
+- Vercel production URL: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
 - If the URL is not live yet, redeploy the latest `main` commit from Vercel.
 
 ## Deployed Contract
@@ -94,7 +94,7 @@ cargo build --target wasm32v1-none --release
 
 ## How To Use
 
-1. Open the app at [live-poll-adv-git-main-rahul7686s-projects.vercel.app](https://live-poll-adv-git-main-rahul7686s-projects.vercel.app/)
+1. Open the app at [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
 2. Refresh detected wallets if needed
 3. Choose an available wallet and connect it
 4. Confirm the wallet is on Stellar Testnet
@@ -130,6 +130,7 @@ npm.cmd run build
 - Vercel can deploy this repo from the repository root using [`vercel.json`](./vercel.json).
 - Recommended Vercel settings: Framework Preset `Vite`, Root Directory `.`, Install Command `cd live-poll-website && npm ci`, Build Command `cd live-poll-website && npm run build`, Output Directory `live-poll-website/dist`, Production Branch `main`.
 - Remove `VITE_BASE_PATH` from the Vercel project environment if it exists.
+- Use the public production domain such as `live-poll-adv.vercel.app` for sharing and README links, not the protected generated preview URL that contains `git-main`.
 - After saving the settings, redeploy the latest `main` commit.
 
 ## Key Files
