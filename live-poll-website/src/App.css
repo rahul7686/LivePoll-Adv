@@ -549,6 +549,28 @@
     width: min(100%, calc(100% - 20px));
   }
 
+  .masthead {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 34px 0 24px;
+    gap: 18px;
+  }
+
+  .masthead-copy {
+    max-width: 100%;
+  }
+
+  .masthead h1 {
+    font-size: clamp(2.05rem, 9vw, 2.75rem);
+    line-height: 1.05;
+    margin: 10px 0 10px;
+  }
+
+  .lead {
+    font-size: 16px;
+    max-width: 52ch;
+  }
+
   .summary-panel,
   .detail-panel,
   .wallet-picker-panel,
@@ -571,7 +593,6 @@
   }
 
   .summary-header,
-  .masthead-actions,
   .detail-value,
   .wallet-selection-meta,
   .wallet-selection-actions,
@@ -583,11 +604,31 @@
     align-items: start;
   }
 
+  .masthead-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    justify-content: stretch;
+  }
+
+  .masthead-actions .primary-button {
+    grid-column: 1 / -1;
+  }
+
   .primary-button,
   .secondary-button,
   .vote-button {
     width: 100%;
     justify-content: center;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .vote-button {
+    min-height: 42px;
+    padding: 0 14px;
+    font-size: 14px;
   }
 
   .vote-button {
