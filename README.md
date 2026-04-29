@@ -1,5 +1,7 @@
 # Live Poll on Stellar Testnet
 
+[![CI](https://github.com/rahul7686/LivePoll-Adv/actions/workflows/ci.yml/badge.svg)](https://github.com/rahul7686/LivePoll-Adv/actions/workflows/ci.yml)
+
 Advanced poll dApp built with Soroban smart contracts and a React frontend.
 The current public deployment stays compatible with the legacy poll contract,
 while the repo now includes the upgraded reward-token contract, inter-contract
@@ -47,6 +49,10 @@ reward-token pair is implemented and locally verified in this repo, but it has
 not been published to a new public contract ID from this snapshot yet. The
 frontend is built to detect that case automatically and keep the legacy vote
 flow working until the redeploy happens.
+
+## Screenshots
+
+- Mobile responsive view: add `docs/mobile-responsive.png` (take a screenshot with a mobile viewport, e.g. 390×844)
 
 ## Recorded Demo
 
@@ -152,6 +158,13 @@ workspace-aware commands in `vercel.json`.
 
 Because the app keeps the legacy `vote` path, the current live demo can stay up
 while the advanced contracts are being rolled out.
+
+### Advanced Deployment Records (fill after deploying)
+
+- Reward token contract ID: `TODO`
+- Reward token deploy transaction hash: `TODO`
+- Advanced poll contract ID: `TODO`
+- Advanced poll deploy transaction hash: `TODO`
 
 ## Key Files
 
