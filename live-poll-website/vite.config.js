@@ -12,6 +12,42 @@ export default defineConfig({
   base: basePath,
   root: projectRoot,
   plugins: [react(), basicSsl()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('react-dom')) {
+            return 'react'
+          }
+
+          if (
+            id.includes('@creit.tech/stellar-wallets-kit') ||
+            id.includes('@stellar/freighter-api')
+          ) {
+            return 'wallet'
+          }
+
+          if (id.includes('@stellar/stellar-sdk/contract')) {
+            return 'soroban-contract'
+          }
+
+          if (id.includes('@stellar/stellar-sdk/rpc')) {
+            return 'soroban-rpc'
+          }
+
+          if (
+            id.includes('@stellar/stellar-sdk') ||
+            id.includes('/buffer/') ||
+            id.includes('\\buffer\\')
+          ) {
+            return 'stellar-core'
+          }
+
+          return undefined
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@contract-client': fileURLToPath(

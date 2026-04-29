@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   POLL_CONTRACT_ID,
   POLL_NETWORK_PASSPHRASE,
@@ -8,8 +16,8 @@ import {
   createEventServer,
   createReadClient,
   createSigningClient,
-  parseVoteEvent,
-  voteEventsFilter,
+  parsePollEvent,
+  pollEventsFilters,
 } from './lib/pollClient'
 import { KitEventType, StellarWalletsKit, initWalletKit } from './lib/walletKit'
 import './App.css'
@@ -18,7 +26,10 @@ const defaultCounts = Object.fromEntries(
   POLL_OPTIONS.map(({ symbol }) => [symbol, 0]),
 )
 
-const contractIdPreview = `${POLL_CONTRACT_ID.slice(0, 12)}...${POLL_CONTRACT_ID.slice(-8)}`
+const formatContractPreview = (value) =>
+  value ? `${value.slice(0, 12)}...${value.slice(-8)}` : 'Unavailable'
+
+const contractIdPreview = formatContractPreview(POLL_CONTRACT_ID)
 const WALLET_DISCONNECT_STORAGE_KEY = 'live-poll-wallet-manual-disconnect'
 const VOTE_CACHE_STORAGE_KEY = 'live-poll-vote-cache'
 
@@ -27,6 +38,19 @@ const createIdleTransactionState = () => ({
   option: '',
   txHash: '',
   message: 'No vote submitted yet.',
+})
+
+const createInitialContractMode = () => ({
+  status: 'checking',
+  rewardRate: 0,
+  rewardContract: '',
+  message: 'Inspecting the deployed contract for reward and inter-contract support...',
+})
+
+const createEmptyWalletInsights = () => ({
+  rewardBalance: 0,
+  voterVotes: 0,
+  lastSyncedAt: '',
 })
 
 const normalizeVoteCounts = (counts) =>
@@ -98,7 +122,7 @@ const writeManualDisconnectPreference = (shouldStayDisconnected) => {
 }
 
 const formatAddress = (address) =>
-  `${address.slice(0, 6)}...${address.slice(-6)}`
+  address?.length > 12 ? `${address.slice(0, 6)}...${address.slice(-6)}` : address
 
 const formatRefreshTimestamp = (date = new Date()) =>
   date.toLocaleTimeString([], {
@@ -106,6 +130,16 @@ const formatRefreshTimestamp = (date = new Date()) =>
     minute: '2-digit',
     second: '2-digit',
   })
+
+const formatEventTimestamp = (value) => {
+  const date = value ? new Date(value) : new Date()
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return formatRefreshTimestamp(date)
+}
 
 const formatError = (error) => {
   if (!error) {
@@ -213,6 +247,30 @@ const transactionToneByPhase = {
   failed: 'danger',
 }
 
+const buildActivityEntry = (event) => {
+  if (event.type === 'vote') {
+    return {
+      key: `vote:${event.txHash || event.ledger}:${event.option}`,
+      title: `${getOptionLabel(event.option)} reached ${event.votes} votes`,
+      detail: 'Vote totals updated from the Soroban event stream.',
+      badge: `${event.votes} total`,
+      ledger: event.ledger,
+      txHash: event.txHash,
+      timestamp: formatEventTimestamp(event.ledgerClosedAt),
+    }
+  }
+
+  return {
+    key: `reward:${event.txHash || event.ledger}:${event.option}`,
+    title: `${event.amount} reward points issued`,
+    detail: `${getOptionLabel(event.option)} triggered an inter-contract reward mint. Latest balance snapshot: ${event.balance}.`,
+    badge: `Balance ${event.balance}`,
+    ledger: event.ledger,
+    txHash: event.txHash,
+    timestamp: formatEventTimestamp(event.ledgerClosedAt),
+  }
+}
+
 function App() {
   const [counts, setCounts] = useState(() => initialVoteCache?.counts ?? defaultCounts)
   const [isLoadingVotes, setIsLoadingVotes] = useState(() => !initialVoteCache)
@@ -220,6 +278,7 @@ function App() {
   const [refreshError, setRefreshError] = useState('')
   const [walletError, setWalletError] = useState('')
   const [voteError, setVoteError] = useState('')
+  const [insightsError, setInsightsError] = useState('')
   const [walletAddress, setWalletAddress] = useState('')
   const [walletNetwork, setWalletNetwork] = useState('')
   const [walletPassphrase, setWalletPassphrase] = useState('')
@@ -232,16 +291,26 @@ function App() {
   )
   const [copiedContract, setCopiedContract] = useState(false)
   const [lastReceipt, setLastReceipt] = useState(null)
-  const [lastEvent, setLastEvent] = useState(null)
+  const [lastVoteEvent, setLastVoteEvent] = useState(null)
+  const [lastRewardEvent, setLastRewardEvent] = useState(null)
+  const [activityFeed, setActivityFeed] = useState([])
   const [transactionState, setTransactionState] = useState(
     createIdleTransactionState(),
   )
-  const shouldStayDisconnectedRef = useRef(readManualDisconnectPreference())
-  const latestVoteRequestIdRef = useRef(0)
+  const [contractMode, setContractMode] = useState(createInitialContractMode)
+  const [walletInsights, setWalletInsights] = useState(createEmptyWalletInsights)
   const [syncState, setSyncState] = useState({
     status: 'starting',
     message: 'Connecting to Soroban events...',
   })
+  const [pageHealth, setPageHealth] = useState(() => ({
+    online: typeof navigator === 'undefined' ? true : navigator.onLine,
+    visibility:
+      typeof document === 'undefined' ? 'visible' : document.visibilityState,
+  }))
+  const shouldStayDisconnectedRef = useRef(readManualDisconnectPreference())
+  const latestVoteRequestIdRef = useRef(0)
+  const deferredActivityFeed = useDeferredValue(activityFeed)
 
   const isWalletConnected = Boolean(walletAddress)
   const isOnTestnet = walletPassphrase === POLL_NETWORK_PASSPHRASE
@@ -324,10 +393,44 @@ function App() {
     }
   })()
 
+  const contractState = (() => {
+    if (contractMode.status === 'advanced') {
+      return {
+        label: 'Advanced rewards live',
+        tone: 'success',
+      }
+    }
+
+    if (contractMode.status === 'checking') {
+      return {
+        label: 'Checking contract mode',
+        tone: 'muted',
+      }
+    }
+
+    return {
+      label: 'Legacy deployment',
+      tone: 'warning',
+    }
+  })()
+
   const transactionTone =
     transactionToneByPhase[transactionState.phase] ?? 'muted'
 
   const syncTone = syncToneByState[syncState.status] ?? 'muted'
+
+  const rewardMetricValue =
+    contractMode.status === 'advanced'
+      ? `${contractMode.rewardRate} pts`
+      : contractMode.status === 'checking'
+        ? 'Checking'
+        : 'Pending'
+
+  const cadenceLabel = !pageHealth.online
+    ? 'Waiting for reconnect'
+    : pageHealth.visibility === 'hidden'
+      ? '10s background sync'
+      : '3s active sync'
 
   const clearWalletConnectionState = useCallback(() => {
     setWalletAddress('')
@@ -342,6 +445,23 @@ function App() {
 
     writeVoteCache(counts, lastUpdatedAt)
   }, [counts, lastUpdatedAt])
+
+  const pushActivityEntry = useCallback((entry) => {
+    if (!entry) {
+      return
+    }
+
+    startTransition(() => {
+      setActivityFeed((currentFeed) => {
+        const nextFeed = [
+          entry,
+          ...currentFeed.filter((currentEntry) => currentEntry.key !== entry.key),
+        ]
+
+        return nextFeed.slice(0, 6)
+      })
+    })
+  }, [])
 
   const loadVotes = useCallback(async ({ silent = false } = {}) => {
     const requestId = latestVoteRequestIdRef.current + 1
@@ -369,30 +489,101 @@ function App() {
         return
       }
 
-      setCounts(
-        Object.fromEntries(
-          POLL_OPTIONS.map((option, index) => [
-            option.symbol,
-            Number(results[index].result ?? 0),
-          ]),
-        ),
-      )
-      setLastUpdatedAt(formatRefreshTimestamp())
+      startTransition(() => {
+        setCounts(
+          Object.fromEntries(
+            POLL_OPTIONS.map((option, index) => [
+              option.symbol,
+              Number(results[index].result ?? 0),
+            ]),
+          ),
+        )
+        setLastUpdatedAt(formatRefreshTimestamp())
+      })
     } catch (error) {
       if (latestVoteRequestIdRef.current !== requestId) {
         return
       }
 
       setRefreshError(formatError(error))
+    } finally {
+      if (latestVoteRequestIdRef.current === requestId) {
+        setIsLoadingVotes(false)
+        setIsRefreshingVotes(false)
+      }
     }
-
-    if (latestVoteRequestIdRef.current !== requestId) {
-      return
-    }
-
-    setIsLoadingVotes(false)
-    setIsRefreshingVotes(false)
   }, [])
+
+  const loadContractMode = useCallback(async () => {
+    try {
+      const readClient = createReadClient()
+      const [rateResult, rewardContractResult] = await Promise.all([
+        readClient.get_reward_rate(),
+        readClient.get_reward_contract(),
+      ])
+
+      setContractMode({
+        status: 'advanced',
+        rewardRate: Number(rateResult.result ?? 0),
+        rewardContract: String(rewardContractResult.result ?? ''),
+        message:
+          'Advanced reward contract detected. Wallet rewards and inter-contract minting are active.',
+      })
+    } catch {
+      setContractMode((currentMode) => {
+        if (currentMode.status === 'advanced') {
+          return {
+            ...currentMode,
+            message:
+              'Reward contract probe could not refresh, so the last advanced profile is being kept.',
+          }
+        }
+
+        return {
+          status: 'legacy',
+          rewardRate: 0,
+          rewardContract: '',
+          message:
+            'Legacy poll deployment detected. The upgraded reward contract activates after redeploying the new contract pair.',
+        }
+      })
+    }
+  }, [])
+
+  const loadWalletInsights = useCallback(
+    async (targetWallet = walletAddress) => {
+      if (!targetWallet || contractMode.status !== 'advanced') {
+        setWalletInsights(createEmptyWalletInsights())
+        setInsightsError('')
+        return
+      }
+
+      setInsightsError('')
+
+      try {
+        const readClient = createReadClient()
+        const [rewardBalanceResult, voterVotesResult] = await Promise.all([
+          readClient.get_reward_balance({
+            voter: targetWallet,
+          }),
+          readClient.get_voter_votes({
+            voter: targetWallet,
+          }),
+        ])
+
+        startTransition(() => {
+          setWalletInsights({
+            rewardBalance: Number(rewardBalanceResult.result ?? 0),
+            voterVotes: Number(voterVotesResult.result ?? 0),
+            lastSyncedAt: formatRefreshTimestamp(),
+          })
+        })
+      } catch (error) {
+        setInsightsError(formatError(error))
+      }
+    },
+    [contractMode.status, walletAddress],
+  )
 
   const refreshWallets = useCallback(async () => {
     setIsLoadingWallets(true)
@@ -416,27 +607,58 @@ function App() {
     }
   }, [])
 
-  const applyParsedVoteEvent = useCallback((parsedEvent) => {
-    if (!parsedEvent || !(parsedEvent.option in defaultCounts)) {
-      return
-    }
-
-    setCounts((currentCounts) => {
-      if ((currentCounts[parsedEvent.option] ?? 0) === parsedEvent.votes) {
-        return currentCounts
+  const applyParsedPollEvent = useCallback(
+    (parsedEvent) => {
+      if (!parsedEvent) {
+        return
       }
 
-      return {
-        ...currentCounts,
-        [parsedEvent.option]: parsedEvent.votes,
-      }
-    })
+      pushActivityEntry(buildActivityEntry(parsedEvent))
 
-    setLastUpdatedAt(
-      formatRefreshTimestamp(new Date(parsedEvent.ledgerClosedAt || Date.now())),
-    )
-    setLastEvent(parsedEvent)
-  }, [])
+      if (parsedEvent.type === 'vote' && parsedEvent.option in defaultCounts) {
+        startTransition(() => {
+          setCounts((currentCounts) => {
+            if ((currentCounts[parsedEvent.option] ?? 0) === parsedEvent.votes) {
+              return currentCounts
+            }
+
+            return {
+              ...currentCounts,
+              [parsedEvent.option]: parsedEvent.votes,
+            }
+          })
+          setLastUpdatedAt(
+            formatRefreshTimestamp(
+              new Date(parsedEvent.ledgerClosedAt || Date.now()),
+            ),
+          )
+          setLastVoteEvent(parsedEvent)
+        })
+      }
+
+      if (parsedEvent.type === 'reward') {
+        startTransition(() => {
+          setLastRewardEvent(parsedEvent)
+        })
+
+        if (
+          contractMode.status === 'advanced' &&
+          walletAddress &&
+          transactionState.txHash &&
+          parsedEvent.txHash === transactionState.txHash
+        ) {
+          void loadWalletInsights(walletAddress)
+        }
+      }
+    },
+    [
+      contractMode.status,
+      loadWalletInsights,
+      pushActivityEntry,
+      transactionState.txHash,
+      walletAddress,
+    ],
+  )
 
   const connectWallet = useCallback(async (wallet) => {
     setVoteError('')
@@ -489,12 +711,14 @@ function App() {
   const disconnectWallet = useCallback(async () => {
     setVoteError('')
     setWalletError('')
+    setInsightsError('')
 
     try {
       shouldStayDisconnectedRef.current = true
       writeManualDisconnectPreference(true)
       await StellarWalletsKit.disconnect()
       clearWalletConnectionState()
+      setWalletInsights(createEmptyWalletInsights())
     } catch (error) {
       shouldStayDisconnectedRef.current = false
       writeManualDisconnectPreference(false)
@@ -533,11 +757,15 @@ function App() {
         return
       }
 
+      const isAdvancedVote = contractMode.status === 'advanced'
+
       setTransactionState({
         phase: 'pending',
         option,
         txHash: '',
-        message: `Awaiting signature for ${getOptionLabel(option)}...`,
+        message: isAdvancedVote
+          ? `Awaiting signature for ${getOptionLabel(option)} and reward minting...`
+          : `Awaiting signature for ${getOptionLabel(option)}...`,
       })
 
       try {
@@ -554,9 +782,14 @@ function App() {
           }
         })
 
-        const assembled = await client.vote({
-          option,
-        })
+        const assembled = isAdvancedVote
+          ? await client.vote_for({
+              voter: activeAddress,
+              option,
+            })
+          : await client.vote({
+              option,
+            })
 
         const sent = await assembled.signAndSend({
           watcher: {
@@ -568,7 +801,9 @@ function App() {
               setTransactionState((currentState) => ({
                 ...currentState,
                 txHash: response.hash,
-                message: 'Transaction submitted. Waiting for final confirmation...',
+                message: isAdvancedVote
+                  ? 'Transaction submitted. Waiting for vote confirmation and reward minting...'
+                  : 'Transaction submitted. Waiting for final confirmation...',
               }))
             },
           },
@@ -582,15 +817,24 @@ function App() {
         setLastReceipt({
           option,
           txHash,
+          mode: isAdvancedVote ? 'advanced' : 'legacy',
         })
         setTransactionState({
           phase: 'success',
           option,
           txHash,
-          message: `${getOptionLabel(option)} is now confirmed on Testnet.`,
+          message: isAdvancedVote
+            ? `${getOptionLabel(option)} is confirmed and the reward contract has been invoked.`
+            : `${getOptionLabel(option)} is now confirmed on Testnet.`,
         })
 
-        await loadVotes({ silent: true })
+        await Promise.all([
+          loadVotes({
+            silent: true,
+          }),
+          loadContractMode(),
+          isAdvancedVote ? loadWalletInsights(activeAddress) : Promise.resolve(),
+        ])
       } catch (error) {
         setTransactionState({
           phase: 'failed',
@@ -600,8 +844,28 @@ function App() {
         })
       }
     },
-    [connectWallet, loadVotes, selectedWallet, walletAddress, walletPassphrase],
+    [
+      connectWallet,
+      contractMode.status,
+      loadContractMode,
+      loadVotes,
+      loadWalletInsights,
+      selectedWallet,
+      walletAddress,
+      walletPassphrase,
+    ],
   )
+
+  const refreshOnChainData = useCallback(() => {
+    void loadVotes({
+      silent: true,
+    })
+    void loadContractMode()
+
+    if (walletAddress && contractMode.status === 'advanced') {
+      void loadWalletInsights(walletAddress)
+    }
+  }, [contractMode.status, loadContractMode, loadVotes, loadWalletInsights, walletAddress])
 
   const copyContractId = async () => {
     try {
@@ -616,8 +880,15 @@ function App() {
   useEffect(() => {
     let isCancelled = false
     const initTimeoutId = window.setTimeout(() => {
+      if (isCancelled) {
+        return
+      }
+
       void refreshWallets()
-      void loadVotes({ silent: Boolean(initialVoteCache) })
+      void loadVotes({
+        silent: Boolean(initialVoteCache),
+      })
+      void loadContractMode()
     }, 0)
 
     initWalletKit()
@@ -676,7 +947,49 @@ function App() {
       unsubscribeWalletSelected?.()
       unsubscribeDisconnect?.()
     }
-  }, [clearWalletConnectionState, loadVotes, refreshWallets])
+  }, [clearWalletConnectionState, loadContractMode, loadVotes, refreshWallets])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      if (contractMode.status === 'advanced' && walletAddress) {
+        void loadWalletInsights(walletAddress)
+        return
+      }
+
+      setWalletInsights(createEmptyWalletInsights())
+      setInsightsError('')
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [contractMode.status, loadWalletInsights, walletAddress])
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      setPageHealth((currentState) => ({
+        ...currentState,
+        visibility: document.visibilityState,
+      }))
+    }
+
+    const updateOnline = () => {
+      setPageHealth((currentState) => ({
+        ...currentState,
+        online: navigator.onLine,
+      }))
+    }
+
+    document.addEventListener('visibilitychange', updateVisibility)
+    window.addEventListener('online', updateOnline)
+    window.addEventListener('offline', updateOnline)
+
+    return () => {
+      document.removeEventListener('visibilitychange', updateVisibility)
+      window.removeEventListener('online', updateOnline)
+      window.removeEventListener('offline', updateOnline)
+    }
+  }, [])
 
   useEffect(() => {
     let isCancelled = false
@@ -684,6 +997,8 @@ function App() {
     let pollTimeoutId = 0
 
     const eventServer = createEventServer()
+    const pollDelay = pageHealth.visibility === 'hidden' ? 10_000 : 3_000
+    const retryDelay = pageHealth.online ? 12_000 : 15_000
 
     const schedulePoll = (delay) => {
       pollTimeoutId = window.setTimeout(() => {
@@ -692,13 +1007,13 @@ function App() {
     }
 
     const applyEvents = (events) => {
-      const parsedEvents = events.map(parseVoteEvent).filter(Boolean)
+      const parsedEvents = events.map(parsePollEvent).filter(Boolean)
 
       if (!parsedEvents.length) {
         return false
       }
 
-      parsedEvents.forEach((event) => applyParsedVoteEvent(event))
+      parsedEvents.forEach((event) => applyParsedPollEvent(event))
 
       const newestEvent = parsedEvents[parsedEvents.length - 1]
       setSyncState({
@@ -715,6 +1030,15 @@ function App() {
         message: 'Connecting to Soroban events...',
       })
 
+      if (!pageHealth.online) {
+        setSyncState({
+          status: 'error',
+          message: 'Offline mode: waiting to resume Soroban event sync.',
+        })
+        schedulePoll(retryDelay)
+        return
+      }
+
       try {
         const latestLedger = await eventServer.getLatestLedger()
 
@@ -723,9 +1047,9 @@ function App() {
         }
 
         const response = await eventServer.getEvents({
-          startLedger: Math.max(latestLedger.sequence - 2, 1),
-          filters: [voteEventsFilter],
-          limit: 25,
+          startLedger: Math.max(latestLedger.sequence - 4, 1),
+          filters: pollEventsFilters,
+          limit: 40,
         })
 
         if (isCancelled) {
@@ -738,11 +1062,14 @@ function App() {
         if (!hadEvents) {
           setSyncState({
             status: 'live',
-            message: `Listening live from ledger ${latestLedger.sequence}.`,
+            message:
+              pageHealth.visibility === 'hidden'
+                ? `Background sync active from ledger ${latestLedger.sequence}.`
+                : `Listening live from ledger ${latestLedger.sequence}.`,
           })
         }
 
-        schedulePoll(4000)
+        schedulePoll(pollDelay)
       } catch (error) {
         if (isCancelled) {
           return
@@ -752,11 +1079,20 @@ function App() {
           status: 'error',
           message: `Event sync unavailable: ${formatError(error)}`,
         })
-        schedulePoll(12000)
+        schedulePoll(retryDelay)
       }
     }
 
     const pollEvents = async () => {
+      if (!pageHealth.online) {
+        setSyncState({
+          status: 'error',
+          message: 'Offline mode: waiting to resume Soroban event sync.',
+        })
+        schedulePoll(retryDelay)
+        return
+      }
+
       if (!cursor) {
         await bootstrapEvents()
         return
@@ -765,8 +1101,8 @@ function App() {
       try {
         const response = await eventServer.getEvents({
           cursor,
-          filters: [voteEventsFilter],
-          limit: 25,
+          filters: pollEventsFilters,
+          limit: 40,
         })
 
         if (isCancelled) {
@@ -781,13 +1117,13 @@ function App() {
             currentState.status === 'error'
               ? {
                   status: 'live',
-                  message: 'Event stream reconnected. Listening for new votes.',
+                  message: 'Event stream reconnected. Listening for new votes and rewards.',
                 }
               : currentState,
           )
         }
 
-        schedulePoll(4000)
+        schedulePoll(pollDelay)
       } catch (error) {
         if (isCancelled) {
           return
@@ -797,7 +1133,7 @@ function App() {
           status: 'error',
           message: `Event sync paused: ${formatError(error)}`,
         })
-        schedulePoll(12000)
+        schedulePoll(retryDelay)
       }
     }
 
@@ -807,7 +1143,7 @@ function App() {
       isCancelled = true
       window.clearTimeout(pollTimeoutId)
     }
-  }, [applyParsedVoteEvent])
+  }, [applyParsedPollEvent, pageHealth.online, pageHealth.visibility])
 
   return (
     <div className="app-shell">
@@ -815,10 +1151,11 @@ function App() {
         <div className="band-inner masthead">
           <div className="masthead-copy">
             <span className="eyebrow">Stellar Testnet Live Poll</span>
-            <h1>Vote on-chain, watch the tally move.</h1>
+            <h1>Vote on-chain, stream every update, and prep for production.</h1>
             <p className="lead">
-              This frontend now supports multiple Stellar wallets, shows live
-              transaction status, and syncs poll activity from Soroban events.
+              The upgraded app keeps legacy voting live, auto-detects advanced
+              contract capabilities, and surfaces real-time Soroban activity with
+              wallet-aware reward insights.
             </p>
           </div>
 
@@ -834,10 +1171,10 @@ function App() {
             <button
               type="button"
               className="secondary-button"
-              onClick={() => loadVotes({ silent: true })}
+              onClick={refreshOnChainData}
               disabled={isRefreshingVotes}
             >
-              {isRefreshingVotes ? 'Refreshing...' : 'Refresh counts'}
+              {isRefreshingVotes ? 'Refreshing...' : 'Refresh chain data'}
             </button>
             {isWalletConnected ? (
               <button
@@ -862,21 +1199,28 @@ function App() {
               <span className={`sync-pill tone-${syncTone}`}>
                 {syncState.status === 'live' ? 'Live sync on' : 'Live sync paused'}
               </span>
+              <span className={`sync-pill tone-${contractState.tone}`}>
+                {contractState.label}
+              </span>
             </div>
 
             <div className="summary-metrics">
-              <div>
+              <article className="metric-card">
                 <span className="metric-label">Total votes</span>
                 <strong>{totalVotes}</strong>
-              </div>
-              <div>
+              </article>
+              <article className="metric-card">
                 <span className="metric-label">Leading option</span>
                 <strong>{leadingOption}</strong>
-              </div>
-              <div>
+              </article>
+              <article className="metric-card">
+                <span className="metric-label">Reward mode</span>
+                <strong>{rewardMetricValue}</strong>
+              </article>
+              <article className="metric-card">
                 <span className="metric-label">Updated</span>
                 <strong>{lastUpdatedAt || 'Checking now'}</strong>
-              </div>
+              </article>
             </div>
 
             {walletAddress ? (
@@ -889,7 +1233,9 @@ function App() {
               </p>
             )}
 
-            <p className="sync-line">{syncState.message}</p>
+            <p className="sync-line">
+              {syncState.message} Current cadence: {cadenceLabel}.
+            </p>
           </div>
 
           <div className="detail-panel">
@@ -907,6 +1253,14 @@ function App() {
               </div>
             </div>
             <div className="detail-row">
+              <span>Reward contract</span>
+              <code>
+                {contractMode.rewardContract
+                  ? formatContractPreview(contractMode.rewardContract)
+                  : 'Waiting for advanced deployment'}
+              </code>
+            </div>
+            <div className="detail-row">
               <span>RPC</span>
               <code>{POLL_RPC_URL}</code>
             </div>
@@ -915,7 +1269,7 @@ function App() {
               <code>{walletNetwork || 'Stellar Testnet'}</code>
             </div>
             <div className="detail-row">
-              <span>Selected wallet</span>
+              <span>Wallet selection</span>
               <code>{selectedWallet?.name || 'None yet'}</code>
             </div>
           </div>
@@ -961,7 +1315,7 @@ function App() {
                   )}
                   {supportedWallets.map((wallet) => (
                     <option key={wallet.id} value={wallet.id}>
-                      {wallet.name} · {wallet.isAvailable ? 'Available' : 'Not found'}
+                      {wallet.name} - {wallet.isAvailable ? 'Available' : 'Not found'}
                     </option>
                   ))}
                 </select>
@@ -1026,8 +1380,9 @@ function App() {
             <div>
               <h2>Vote board</h2>
               <p>
-                Each vote becomes a real Soroban transaction, then the totals
-                update from live contract events.
+                Each vote becomes a real Soroban transaction. When the advanced
+                deployment is live, wallet-authenticated votes will also trigger
+                reward minting through an inter-contract call.
               </p>
             </div>
           </div>
@@ -1094,6 +1449,115 @@ function App() {
         </div>
       </section>
 
+      <section className="band insights-band">
+        <div className="band-inner insights-grid">
+          <div className="insight-panel">
+            <div className="panel-heading">
+              <h2>Reward ledger</h2>
+              <span className={`tx-pill tone-${contractState.tone}`}>
+                {contractMode.status}
+              </span>
+            </div>
+
+            {contractMode.status === 'advanced' ? (
+              <>
+                <div className="insight-metrics">
+                  <article className="stat-card">
+                    <span className="stat-label">Per-vote reward</span>
+                    <strong>{contractMode.rewardRate}</strong>
+                  </article>
+                  <article className="stat-card">
+                    <span className="stat-label">Wallet rewards</span>
+                    <strong>
+                      {isWalletConnected ? walletInsights.rewardBalance : '--'}
+                    </strong>
+                  </article>
+                  <article className="stat-card">
+                    <span className="stat-label">Wallet votes</span>
+                    <strong>
+                      {isWalletConnected ? walletInsights.voterVotes : '--'}
+                    </strong>
+                  </article>
+                </div>
+
+                {isWalletConnected ? (
+                  <p className="section-note">
+                    Personal reward data refreshed{' '}
+                    {walletInsights.lastSyncedAt || 'just now'}.
+                  </p>
+                ) : (
+                  <p className="muted">
+                    Connect a wallet to see personal reward balances and wallet
+                    contribution totals.
+                  </p>
+                )}
+
+                {lastRewardEvent ? (
+                  <div className="notice info-notice">
+                    Latest reward event: {lastRewardEvent.amount} points issued
+                    after {getOptionLabel(lastRewardEvent.option)}. Latest reward
+                    balance snapshot: {lastRewardEvent.balance}.
+                  </div>
+                ) : (
+                  <p className="muted">
+                    Waiting for the next reward event to arrive from the poll
+                    contract.
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="notice info-notice">
+                {contractMode.message}
+              </div>
+            )}
+
+            {insightsError ? (
+              <div className="notice warning-notice">{insightsError}</div>
+            ) : null}
+          </div>
+
+          <div className="insight-panel">
+            <div className="panel-heading">
+              <h2>Ops board</h2>
+              <span className={`tx-pill tone-${pageHealth.online ? 'success' : 'warning'}`}>
+                {pageHealth.online ? 'online' : 'offline'}
+              </span>
+            </div>
+
+            <div className="ops-list">
+              <div className="ops-row">
+                <span className="ops-label">Contract mode</span>
+                <strong className="ops-value">{contractState.label}</strong>
+              </div>
+              <div className="ops-row">
+                <span className="ops-label">Live stream</span>
+                <strong className="ops-value">{syncState.message}</strong>
+              </div>
+              <div className="ops-row">
+                <span className="ops-label">Page state</span>
+                <strong className="ops-value">
+                  {pageHealth.visibility} / {pageHealth.online ? 'connected' : 'offline'}
+                </strong>
+              </div>
+              <div className="ops-row">
+                <span className="ops-label">Cadence</span>
+                <strong className="ops-value">{cadenceLabel}</strong>
+              </div>
+              <div className="ops-row">
+                <span className="ops-label">CI/CD</span>
+                <strong className="ops-value">GitHub Actions + Vercel</strong>
+              </div>
+            </div>
+
+            <p className="muted">
+              The production pass now includes contract tests, frontend lint and
+              build checks, and a deployment story that can roll forward from the
+              upgraded `main` branch.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="band activity-band">
         <div className="band-inner activity-grid">
           <div className="activity-panel">
@@ -1112,6 +1576,26 @@ function App() {
               </p>
             ) : null}
 
+            {lastReceipt ? (
+              <div className="receipt">
+                <p>
+                  Last submitted vote: <strong>{getOptionLabel(lastReceipt.option)}</strong>
+                </p>
+                <p className="muted">
+                  Path used: {lastReceipt.mode === 'advanced' ? 'rewarded vote' : 'legacy vote'}
+                </p>
+                {lastReceipt.txHash ? (
+                  <a
+                    href={buildExplorerTransactionUrl(lastReceipt.txHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open latest receipt
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+
             {transactionState.txHash ? (
               <a
                 href={buildExplorerTransactionUrl(transactionState.txHash)}
@@ -1125,51 +1609,47 @@ function App() {
 
           <div className="activity-panel">
             <div className="panel-heading">
-              <h2>Live activity</h2>
+              <h2>Event feed</h2>
               <span className={`tx-pill tone-${syncTone}`}>
-                {syncState.status}
+                {deferredActivityFeed.length || 0}
               </span>
             </div>
 
-            {lastReceipt ? (
-              <div className="receipt">
-                <p>
-                  Last submitted vote: <strong>{getOptionLabel(lastReceipt.option)}</strong>
-                </p>
-                {lastReceipt.txHash ? (
-                  <a
-                    href={buildExplorerTransactionUrl(lastReceipt.txHash)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open latest receipt
-                  </a>
-                ) : null}
-              </div>
-            ) : (
+            {lastVoteEvent ? (
               <p className="muted">
-                Your next successful vote will show the transaction receipt here.
+                Latest tally event: <strong>{getOptionLabel(lastVoteEvent.option)}</strong>{' '}
+                now sits at <strong>{lastVoteEvent.votes}</strong>.
               </p>
-            )}
+            ) : null}
 
-            {lastEvent ? (
-              <div className="event-card">
-                <p>
-                  Event sync last saw <strong>{getOptionLabel(lastEvent.option)}</strong>{' '}
-                  reach <strong>{lastEvent.votes}</strong> votes.
-                </p>
-                <p className="muted">Ledger {lastEvent.ledger}</p>
-                <a
-                  href={buildExplorerTransactionUrl(lastEvent.txHash)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Open event transaction
-                </a>
-              </div>
+            {deferredActivityFeed.length ? (
+              <ul className="activity-feed">
+                {deferredActivityFeed.map((entry) => (
+                  <li key={entry.key} className="feed-item">
+                    <div className="feed-top">
+                      <strong>{entry.title}</strong>
+                      <span className="feed-badge">{entry.badge}</span>
+                    </div>
+                    <p>{entry.detail}</p>
+                    <div className="feed-meta">
+                      <span>Ledger {entry.ledger}</span>
+                      <span>{entry.timestamp || 'Just now'}</span>
+                      {entry.txHash ? (
+                        <a
+                          href={buildExplorerTransactionUrl(entry.txHash)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open transaction
+                        </a>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             ) : (
               <p className="muted">
-                Waiting for the next on-chain vote event to arrive.
+                Waiting for the next on-chain vote or reward event to arrive.
               </p>
             )}
           </div>

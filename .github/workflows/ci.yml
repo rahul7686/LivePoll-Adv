@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            live-poll-contract/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('live-poll-contract/Cargo.lock') }}
+
+      - name: Run contract tests
+        working-directory: live-poll-contract
+        run: cargo test
+
+      - name: Build release Wasm artifacts
+        working-directory: live-poll-contract
+        run: cargo build --workspace --target wasm32v1-none --release
+
+      - name: Upload contract Wasm
+        uses: actions/upload-artifact@v4
+        with:
+          name: soroban-wasm
+          path: |
+            live-poll-contract/target/wasm32v1-none/release/hello_world.wasm
+            live-poll-contract/target/wasm32v1-none/release/poll_reward_token.wasm
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: live-poll-website/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: live-poll-website
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: live-poll-website
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: live-poll-website
+        run: npm run build

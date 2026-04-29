@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite --configLoader native",
     "build": "vite build --configLoader native",
+    "build:contracts": "stellar contract build --manifest-path ../live-poll-contract/Cargo.toml --out-dir ../live-poll-contract/dist",
     "lint": "eslint .",
-    "preview": "vite preview --configLoader native"
+    "prepare:contracts": "npm run build:contracts && npm run refresh:contract-client",
+    "preview": "vite preview --configLoader native",
+    "refresh:contract-client": "stellar contract bindings typescript --wasm ../live-poll-contract/dist/hello_world.wasm --output-dir ./packages/live-poll-contract --overwrite"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.1.0",
