@@ -61,7 +61,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: live-poll-website
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Lint frontend
         working-directory: live-poll-website
