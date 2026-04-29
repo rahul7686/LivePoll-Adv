@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import net from 'node:net'
@@ -49,7 +50,10 @@ function normalizeTarget(value) {
 async function captureScreenshot(browserPathResolved, targetUrl, pngPath) {
   mkdirSync(dirname(pngPath), { recursive: true })
 
-  const scratchDir = resolve(dirname(pngPath), '.cdp-mobile-screenshot')
+  const scratchDir = resolve(
+    tmpdir(),
+    `cdp-mobile-screenshot-${process.pid}-${Date.now().toString(36)}`,
+  )
   rmSync(scratchDir, { force: true, recursive: true })
   mkdirSync(scratchDir, { recursive: true })
 
@@ -65,6 +69,8 @@ async function captureScreenshot(browserPathResolved, targetUrl, pngPath) {
       '--disable-gpu',
       '--disable-crash-reporter',
       '--no-first-run',
+      '--ignore-certificate-errors',
+      '--allow-insecure-localhost',
       `--remote-debugging-port=${port}`,
       `--user-data-dir=${profileDir}`,
     ],
@@ -93,11 +99,9 @@ async function captureScreenshot(browserPathResolved, targetUrl, pngPath) {
     await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true })
     await cdp.send('Network.enable')
 
-    const loaded = cdp.waitFor('Page.loadEventFired')
     await cdp.send('Page.navigate', { url: targetUrl })
-    await loaded
-
-    await delay(1500)
+    await waitForRenderedContent(cdp, targetUrl)
+    await delay(1000)
 
     const { data } = await cdp.send('Page.captureScreenshot', {
       format: 'png',
@@ -233,4 +237,35 @@ function createCdpClient(socket) {
       })
     },
   }
+}
+
+async function waitForRenderedContent(cdp, targetUrl) {
+  let lastState = null
+
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const { result } = await cdp.send('Runtime.evaluate', {
+      expression: `JSON.stringify({
+        href: window.location.href,
+        readyState: document.readyState,
+        rootChildren: document.querySelector('#root')?.childElementCount ?? 0,
+        bodyText: document.body?.innerText?.trim?.() ?? ''
+      })`,
+      returnByValue: true,
+    })
+
+    lastState = JSON.parse(result.value)
+    const hasRenderedApp = lastState.rootChildren > 0 || lastState.bodyText.length > 0
+    const isTargetPage =
+      lastState.href === targetUrl || lastState.href.replace(/\/$/, '') === targetUrl.replace(/\/$/, '')
+
+    if (lastState.readyState === 'complete' && isTargetPage && hasRenderedApp) {
+      return
+    }
+
+    await delay(250)
+  }
+
+  throw new Error(
+    `Timed out waiting for rendered page content. Last state: ${JSON.stringify(lastState)}`,
+  )
 }

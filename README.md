@@ -40,19 +40,18 @@ minting flow, CI automation, and a mobile-ready production dashboard.
 ## Current Public Deployment
 
 - Frontend URL: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
-- Current public contract ID: `CC43GCB3LMRLKQ6JFJCPNT2QJXVOK73Y5HWAF7RZAYIMRL322I7WIZ6L`
-- Deploy transaction hash: `d7a8f8f378e8813c45db34e28e0721c11758c990564fe6864eb61753edfbf418`
-- Verified read transaction hash: `3c9004799722dc8dc79781602aef11f4e987b843d9d185183f45a478826f49dc`
+- Current frontend contract ID (legacy build): `CC43GCB3LMRLKQ6JFJCPNT2QJXVOK73Y5HWAF7RZAYIMRL322I7WIZ6L`
+- Legacy deploy transaction hash: `d7a8f8f378e8813c45db34e28e0721c11758c990564fe6864eb61753edfbf418`
+- Legacy verified read transaction hash: `3c9004799722dc8dc79781602aef11f4e987b843d9d185183f45a478826f49dc`
 
-The public contract above is still the legacy poll deployment. The upgraded
-reward-token pair is implemented and locally verified in this repo, but it has
-not been published to a new public contract ID from this snapshot yet. The
-frontend is built to detect that case automatically and keep the legacy vote
-flow working until the redeploy happens.
+The public frontend URL above is still the last deployed legacy-facing build.
+The upgraded reward-token pair is now live on testnet in the deployment
+records below, and the repo defaults now point at the advanced poll contract
+for the next frontend deployment.
 
 ## Screenshots
 
-- Mobile responsive view: add `docs/mobile-responsive.png` (take a screenshot with a mobile viewport, e.g. 390×844)
+![Mobile responsive dashboard](./docs/mobile-responsive.png)
 
 ## Recorded Demo
 
@@ -156,15 +155,15 @@ workspace-aware commands in `vercel.json`.
 3. Call `set_admin` on the reward token so the poll contract address becomes the minting admin.
 4. Update `VITE_POLL_CONTRACT_ID` to the new poll contract ID and redeploy the frontend.
 
-Because the app keeps the legacy `vote` path, the current live demo can stay up
-while the advanced contracts are being rolled out.
+Because the app keeps the legacy `vote` path, the frontend can fall back
+cleanly while the public deployment catches up to the advanced contract pair.
 
-### Advanced Deployment Records (fill after deploying)
+### Advanced Deployment Records
 
-- Reward token contract ID: `TODO`
-- Reward token deploy transaction hash: `TODO`
-- Advanced poll contract ID: `TODO`
-- Advanced poll deploy transaction hash: `TODO`
+- Reward token contract ID: `CA6FUAPQY6JOB7CQVUSRIVRZ2G3FINFP5YNIUDNXVSCQID6NXY366GBE`
+- Reward token deploy transaction hash: `3623d7f5fb5829bcf98cab9275841529e7253e5218f8fa3a067c5a0b52923c6c`
+- Advanced poll contract ID: `CBEBAAA7WQU3XOQLYAHJK6MXP3XBNQCZUV5CLD5Q4CAFARPZKIS53TPV`
+- Advanced poll deploy transaction hash: `410cec9921778e69da4e42e19d56fc9fe5f31c23eb0a6d8b922730d0b88ef426`
 
 ## Key Files
 
@@ -177,4 +176,3 @@ while the advanced contracts are being rolled out.
 - Frontend contract client helpers: [`live-poll-website/src/lib/pollClient.js`](./live-poll-website/src/lib/pollClient.js)
 - Frontend contract bindings: [`live-poll-website/packages/live-poll-contract/src/index.ts`](./live-poll-website/packages/live-poll-contract/src/index.ts)
 - Wallet integration: [`live-poll-website/src/lib/walletKit.js`](./live-poll-website/src/lib/walletKit.js)
-- CI workflow: [`/.github/workflows/ci.yml`](./.github/workflows/ci.yml)
