@@ -51,7 +51,7 @@ for the next frontend deployment.
 
 ## Screenshots
 ### Dasboard
-<img width="1440" height="2200" alt="wallet-selector" src="https://github.com/user-attachments/assets/40f3556c-08de-4901-8bae-2cb673520656" />
+<img width="1895" height="909" alt="Screenshot 2026-04-30 121448" src="https://github.com/user-attachments/assets/e7316849-b698-465f-b0f1-4c6627adbe95" />
 
 ### Mobile View
 <img width="770" height="1600" alt="WhatsApp Image" src="https://github.com/user-attachments/assets/4e44285d-55a7-46da-a2ba-f5455036e595" />
