@@ -50,8 +50,15 @@ records below, and the repo defaults now point at the advanced poll contract
 for the next frontend deployment.
 
 ## Screenshots
+### Dashword
+<img width="1440" height="2200" alt="wallet-selector" src="https://github.com/user-attachments/assets/40f3556c-08de-4901-8bae-2cb673520656" />
 
-![Mobile responsive dashboard](./docs/mobile-responsive.png)
+### Mobile View
+<img width="770" height="1600" alt="WhatsApp Image" src="https://github.com/user-attachments/assets/4e44285d-55a7-46da-a2ba-f5455036e595" />
+
+### CI/CD Pipeline
+<img width="1920" height="1020" alt="Screenshot 2026-04-30 092520" src="https://github.com/user-attachments/assets/dbbb36a5-44c7-4550-8a10-c6422eadcbba" />
+
 
 ## Recorded Demo
 
