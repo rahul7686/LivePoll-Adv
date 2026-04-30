@@ -10,7 +10,7 @@ minting flow, CI automation, and a mobile-ready production dashboard.
 ## Project Links
 
 - Live demo link: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
-- Demo video: [Google Drive recording](https://drive.google.com/file/d/1UR3PWTMgjcDsVdP7BnRU-rHqyRAdyuBA/view?usp=sharing)
+- Demo video: [Google Drive recording](https://drive.google.com/file/d/1NtKd9PYUHQKNjKJxVoTd8Yk6lYySC2lR/view?usp=sharing)
 
 ## Advanced Submission Checklist
 
@@ -62,7 +62,7 @@ for the next frontend deployment.
 
 ## Recorded Demo
 
-- Demo video: [Google Drive recording](https://drive.google.com/file/d/1UR3PWTMgjcDsVdP7BnRU-rHqyRAdyuBA/view?usp=sharing)
+- Demo video: [Google Drive recording](https://drive.google.com/file/d/1NtKd9PYUHQKNjKJxVoTd8Yk6lYySC2lR/view?usp=sharing)
 - Local MP4 asset: [`docs/live-poll-demo.mp4`](./docs/live-poll-demo.mp4)
 
 ## Local Setup
