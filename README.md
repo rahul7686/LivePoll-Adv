@@ -50,7 +50,7 @@ records below, and the repo defaults now point at the advanced poll contract
 for the next frontend deployment.
 
 ## Screenshots
-### Dashword
+### Dasboard
 <img width="1440" height="2200" alt="wallet-selector" src="https://github.com/user-attachments/assets/40f3556c-08de-4901-8bae-2cb673520656" />
 
 ### Mobile View
