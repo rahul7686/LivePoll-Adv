@@ -14,11 +14,16 @@ minting flow, CI automation, and a mobile-ready production dashboard.
 
 ## Advanced Submission Checklist
 
-- Inter-contract call working: `vote_for` in the poll contract now mints reward points through the separate reward-token contract and is covered by local tests.
-- Custom token included: `poll-reward-token` is part of the Soroban workspace and supports admin handoff plus mint tracking.
-- CI/CD running: GitHub Actions now runs contract tests plus frontend lint/build on pushes and pull requests, and Vercel can deploy the root repo via [`vercel.json`](./vercel.json).
-- Mobile responsive: the frontend layout now adapts across desktop and mobile with stacked action controls, responsive analytics cards, and an event feed that stays readable on small screens.
-- Minimum 8+ meaningful commits: the repository history already exceeds this requirement.
+- Public GitHub repository: this project is tracked in the public `LivePoll-Adv` repo.
+- README with complete documentation: the README covers architecture, contracts, deployment flow, tests, CI/CD, and local setup.
+- Minimum 10+ meaningful commits: the repository history already exceeds this requirement.
+- Live demo link: the production deployment is published on Vercel and linked below.
+- Contract deployment address: both the legacy and upgraded contract IDs are documented in the deployment section.
+- Transaction hash for contract interaction: deploy and verified read hashes are documented below.
+- Mobile responsive UI: the frontend layout adapts across desktop and mobile with stacked controls, responsive analytics cards, and a readable activity feed.
+- CI/CD pipeline running: GitHub Actions runs contract tests, Wasm builds, linting, and frontend builds on push and pull request events.
+- Test output with 3+ passing tests: contract tests currently cover 9 total passing cases across both contracts.
+- Demo video link: a 1 to 2 minute walkthrough is linked in Project Links and Recorded Demo.
 
 ## What Changed
 
