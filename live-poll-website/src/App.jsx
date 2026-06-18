@@ -409,7 +409,7 @@ function App() {
     }
 
     return {
-      label: 'Legacy deployment',
+      label: 'Advanced deployment pending',
       tone: 'warning',
     }
   })()
@@ -544,7 +544,7 @@ function App() {
           rewardRate: 0,
           rewardContract: '',
           message:
-            'Legacy poll deployment detected. The upgraded reward contract activates after redeploying the new contract pair.',
+            'Advanced reward contract not detected yet. Deploy the upgraded contract pair to enable rewards.',
         }
       })
     }
@@ -1153,9 +1153,9 @@ function App() {
             <span className="eyebrow">Stellar Testnet Live Poll</span>
             <h1>Vote on-chain, stream every update, and prep for production.</h1>
             <p className="lead">
-              The upgraded app keeps legacy voting live, auto-detects advanced
-              contract capabilities, and surfaces real-time Soroban activity with
-              wallet-aware reward insights.
+              The upgraded app auto-detects advanced contract capabilities and
+              surfaces real-time Soroban activity with wallet-aware reward
+              insights.
             </p>
           </div>
 
@@ -1257,7 +1257,7 @@ function App() {
               <code>
                 {contractMode.rewardContract
                   ? formatContractPreview(contractMode.rewardContract)
-                  : 'Waiting for advanced deployment'}
+                  : 'Waiting for reward contract'}
               </code>
             </div>
             <div className="detail-row">
@@ -1381,7 +1381,7 @@ function App() {
               <h2>Vote board</h2>
               <p>
                 Each vote becomes a real Soroban transaction. When the advanced
-                deployment is live, wallet-authenticated votes will also trigger
+                deployment is live, wallet-authenticated votes also trigger
                 reward minting through an inter-contract call.
               </p>
             </div>
@@ -1582,7 +1582,7 @@ function App() {
                   Last submitted vote: <strong>{getOptionLabel(lastReceipt.option)}</strong>
                 </p>
                 <p className="muted">
-                  Path used: {lastReceipt.mode === 'advanced' ? 'rewarded vote' : 'legacy vote'}
+                  Path used: {lastReceipt.mode === 'advanced' ? 'rewarded vote' : 'standard vote'}
                 </p>
                 {lastReceipt.txHash ? (
                   <a

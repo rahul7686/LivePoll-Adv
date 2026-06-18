@@ -3,9 +3,9 @@
 [![CI](https://github.com/rahul7686/LivePoll-Adv/actions/workflows/ci.yml/badge.svg)](https://github.com/rahul7686/LivePoll-Adv/actions/workflows/ci.yml)
 
 Advanced poll dApp built with Soroban smart contracts and a React frontend.
-The current public deployment stays compatible with the legacy poll contract,
-while the repo now includes the upgraded reward-token contract, inter-contract
-minting flow, CI automation, and a mobile-ready production dashboard.
+The current public deployment is wired to the upgraded reward-token contract,
+inter-contract minting flow, CI automation, and a mobile-ready production
+dashboard.
 
 ## Project Links
 
@@ -18,7 +18,7 @@ minting flow, CI automation, and a mobile-ready production dashboard.
 - README with complete documentation: the README covers architecture, contracts, deployment flow, tests, CI/CD, and local setup.
 - Minimum 10+ meaningful commits: the repository history already exceeds this requirement.
 - Live demo link: the production deployment is published on Vercel and linked below.
-- Contract deployment address: both the legacy and upgraded contract IDs are documented in the deployment section.
+- Contract deployment address: the active advanced contract IDs are documented in the deployment section.
 - Transaction hash for contract interaction: deploy and verified read hashes are documented below.
 - Mobile responsive UI: the frontend layout adapts across desktop and mobile with stacked controls, responsive analytics cards, and a readable activity feed.
 - CI/CD pipeline running: GitHub Actions runs contract tests, Wasm builds, linting, and frontend builds on push and pull request events.
@@ -36,7 +36,7 @@ minting flow, CI automation, and a mobile-ready production dashboard.
 ## Architecture
 
 - `live-poll-contract/contracts/hello-world/`
-  Primary poll contract. Keeps legacy `vote(option)` support while adding advanced `vote_for(voter, option)` with reward-token minting.
+  Primary poll contract. Adds advanced `vote_for(voter, option)` with reward-token minting and keeps `vote(option)` available for compatibility.
 - `live-poll-contract/contracts/poll-reward-token/`
   Reward token contract. Handles balance tracking, total supply, and admin handoff to the poll contract.
 - `live-poll-website/`
@@ -45,14 +45,11 @@ minting flow, CI automation, and a mobile-ready production dashboard.
 ## Current Public Deployment
 
 - Frontend URL: [live-poll-adv.vercel.app](https://live-poll-adv.vercel.app/)
-- Current frontend contract ID (legacy build): `CC43GCB3LMRLKQ6JFJCPNT2QJXVOK73Y5HWAF7RZAYIMRL322I7WIZ6L`
-- Legacy deploy transaction hash: `d7a8f8f378e8813c45db34e28e0721c11758c990564fe6864eb61753edfbf418`
-- Legacy verified read transaction hash: `3c9004799722dc8dc79781602aef11f4e987b843d9d185183f45a478826f49dc`
+- Current frontend contract ID: `CBEBAAA7WQU3XOQLYAHJK6MXP3XBNQCZUV5CLD5Q4CAFARPZKIS53TPV`
+- Current reward contract ID: `CA6FUAPQY6JOB7CQVUSRIVRZ2G3FINFP5YNIUDNXVSCQID6NXY366GBE`
 
-The public frontend URL above is still the last deployed legacy-facing build.
-The upgraded reward-token pair is now live on testnet in the deployment
-records below, and the repo defaults now point at the advanced poll contract
-for the next frontend deployment.
+The public frontend URL above is wired to the advanced contract pair and the
+repo defaults now point at the current testnet deployment.
 
 ## Screenshots
 ### Dashboard
@@ -178,9 +175,6 @@ workspace-aware commands in `vercel.json`.
 2. Deploy the upgraded poll contract with the reward-token contract ID and your desired reward rate.
 3. Call `set_admin` on the reward token so the poll contract address becomes the minting admin.
 4. Update `VITE_POLL_CONTRACT_ID` to the new poll contract ID and redeploy the frontend.
-
-Because the app keeps the legacy `vote` path, the frontend can fall back
-cleanly while the public deployment catches up to the advanced contract pair.
 
 ### Advanced Deployment Records
 
