@@ -55,7 +55,7 @@ records below, and the repo defaults now point at the advanced poll contract
 for the next frontend deployment.
 
 ## Screenshots
-### Dasboard
+### Dashboard
 <img width="1895" height="909" alt="Screenshot 2026-04-30 121448" src="https://github.com/user-attachments/assets/e7316849-b698-465f-b0f1-4c6627adbe95" />
 
 ### Mobile View
@@ -63,6 +63,18 @@ for the next frontend deployment.
 
 ### CI/CD Pipeline
 <img width="1920" height="1020" alt="Screenshot 2026-04-30 092520" src="https://github.com/user-attachments/assets/dbbb36a5-44c7-4550-8a10-c6422eadcbba" />
+
+### Test Output
+![Passing contract tests](./docs/tests-passing.svg)
+
+## Submission Proof
+
+This section maps directly to the level checklist so reviewers can verify the required evidence quickly.
+
+- Mobile responsive UI: see the mobile screenshot above and [`docs/mobile-responsive.png`](./docs/mobile-responsive.png).
+- CI/CD pipeline running: see the CI/CD screenshot above and the GitHub Actions badge at the top of the README.
+- Test output with 3+ passing tests: see the test output image above and [`docs/tests-passing.svg`](./docs/tests-passing.svg).
+- Demo video link: see [Project Links](#project-links) and [Recorded Demo](#recorded-demo).
 
 
 ## Recorded Demo
