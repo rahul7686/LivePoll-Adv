@@ -66,13 +66,15 @@ repo defaults now point at the current testnet deployment.
 
 ## Submission Proof
 
-This section maps directly to the level checklist so reviewers can verify the required evidence quickly.
+This section mirrors the submission checklist so reviewers can confirm the
+required evidence at a glance.
 
-- Mobile responsive UI: see the mobile screenshot above and [`docs/mobile-responsive.png`](./docs/mobile-responsive.png).
-- CI/CD pipeline running: see the CI/CD screenshot above and the GitHub Actions badge at the top of the README.
-- Test output with 3+ passing tests: see the test output image above and [`docs/tests-passing.png`](./docs/tests-passing.png).
-- Demo video link: see [Project Links](#project-links) and [Recorded Demo](#recorded-demo).
-
+| Requirement | Evidence |
+| --- | --- |
+| Mobile responsive UI | See the screenshot above and [`docs/mobile-responsive.png`](./docs/mobile-responsive.png). |
+| CI/CD pipeline running | See the screenshot above and the GitHub Actions badge at the top of the README. |
+| Test output with 3+ passing tests | See the screenshot above and [`docs/tests-passing.png`](./docs/tests-passing.png). |
+| Demo video link | See [Project Links](#project-links) and [Recorded Demo](#recorded-demo). |
 
 ## Recorded Demo
 
